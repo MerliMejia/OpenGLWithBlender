@@ -28,10 +28,11 @@ int main()
         int whitespaceCount = 0;
         int lastWhitespaceCount = 0;
         int lineLength = strlen(line);
-        char tagName[100];
 
         for (int i = 0; i < lineLength; i++)
         {
+            char tagName[100];
+
             if (isspace(line[i]))
             {
                 whitespaceCount++;
@@ -43,8 +44,6 @@ int main()
                     maxWhitespaceCount = whitespaceCount;
                 }
 
-                whitespaceCount = 0;
-
                 if (line[i] == '<')
                 {
                     // Tag start
@@ -52,13 +51,18 @@ int main()
                     int j = i + 1;
                     int k = 0; // Index for tag name.
 
-                    while (j < len && line[j] != ' ' && line[j] != '>' && line[j] != '?' && line[j] != '/')
+                    while (j < len)
                     {
+                        if (line[j] == ' ' || line[j] == '>')
+                        {
+                            break;
+                        }
                         tagName[k++] = line[j];
                         j++;
                     }
                     tagName[k] = '\0'; // Null terminate the string
                     printf("Tag name: %s\n", tagName);
+                    whitespaceCount = 0;
                     break;
                 }
             }
