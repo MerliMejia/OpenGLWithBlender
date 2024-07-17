@@ -5,9 +5,61 @@
 #include <string.h>
 #include "shaders.h"
 #include <math.h>
+#include <ctype.h>
 
 int main()
 {
+
+    FILE *file = fopen("thing.dae", "r");
+
+    if (file == NULL)
+    {
+        printf("File not found\n");
+        return -1;
+    }
+
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    int maxWhitespaceCount = 0;
+
+    while ((read = getline(&line, &len, file)) != -1)
+    {
+        int whitespaceCount = 0;
+        int lastWhitespaceCount = 0;
+        for (int i = 0; i < strlen(line); i++)
+        {
+            if (isspace(line[i]))
+            {
+                whitespaceCount++;
+            }
+            else if (isalpha)
+            {
+                if (whitespaceCount > maxWhitespaceCount)
+                {
+                    maxWhitespaceCount = whitespaceCount;
+                }
+                break;
+            }
+        }
+
+        if (whitespaceCount > lastWhitespaceCount)
+        {
+            // New tag
+        }
+        else
+        {
+            // Same tag
+        }
+
+        printf("Whitespace count: %d\n", whitespaceCount);
+        printf("%s", line);
+    }
+
+    printf("\nMax whitespace count: %d\n\n", maxWhitespaceCount);
+
+    fclose(file);
+
     // Initialize GLFW
     if (!glfwInit())
     {

@@ -1,3 +1,4 @@
+prod
 gcc main.c \
     utils.c \
     shaders.c \
@@ -8,3 +9,15 @@ gcc main.c \
     -lGLEW \
     -framework OpenGL \
     && ./main
+
+DEV
+gcc main.c -g \
+    utils.c \
+    shaders.c \
+    -o main \
+    -I/opt/homebrew/Cellar/glfw/3.4/include/GLFW/ \
+    -L/opt/homebrew/lib/ \
+    -lglfw \
+    -lGLEW \
+    -framework OpenGL \
+    && /usr/bin/lldb ./main
