@@ -27,19 +27,40 @@ int main()
     {
         int whitespaceCount = 0;
         int lastWhitespaceCount = 0;
-        for (int i = 0; i < strlen(line); i++)
+        int lineLength = strlen(line);
+        char tagName[100];
+
+        for (int i = 0; i < lineLength; i++)
         {
             if (isspace(line[i]))
             {
                 whitespaceCount++;
             }
-            else if (isalpha)
+            else
             {
                 if (whitespaceCount > maxWhitespaceCount)
                 {
                     maxWhitespaceCount = whitespaceCount;
                 }
-                break;
+
+                whitespaceCount = 0;
+
+                if (line[i] == '<')
+                {
+                    // Tag start
+                    // Getting the tag name... Go to the right until you find a space
+                    int j = i + 1;
+                    int k = 0; // Index for tag name.
+
+                    while (j < len && line[j] != ' ' && line[j] != '>' && line[j] != '?' && line[j] != '/')
+                    {
+                        tagName[k++] = line[j];
+                        j++;
+                    }
+                    tagName[k] = '\0'; // Null terminate the string
+                    printf("Tag name: %s\n", tagName);
+                    break;
+                }
             }
         }
 
@@ -52,13 +73,15 @@ int main()
             // Same tag
         }
 
-        printf("Whitespace count: %d\n", whitespaceCount);
-        printf("%s", line);
+        // printf("Whitespace count: %d\n", whitespaceCount);
+        // printf("%s", line);
     }
 
     printf("\nMax whitespace count: %d\n\n", maxWhitespaceCount);
 
     fclose(file);
+
+    return 0;
 
     // Initialize GLFW
     if (!glfwInit())
