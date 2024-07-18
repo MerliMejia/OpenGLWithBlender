@@ -81,6 +81,9 @@ int main()
                         int attributeNameIndex = 0;
                         int isReadingValue = 0;
 
+                        char attributeValue[100] = {0};
+                        int attributeValueIndex = 0;
+
                         while (attributeReaderLine < lineLength && line[attributeReaderLine] != '>')
                         {
                             if (line[attributeReaderLine] == '=')
@@ -92,6 +95,7 @@ int main()
 
                             if (isReadingValue && line[attributeReaderLine] != '"')
                             {
+                                attributeValue[attributeValueIndex++] = line[attributeReaderLine];
                                 attributeReaderLine++;
                                 continue;
                             }
@@ -101,9 +105,13 @@ int main()
                                 attributeReaderLine++; // Skip closing quote
 
                                 attributeName[attributeNameIndex] = '\0'; // Null terminate the string
+                                attributeValue[attributeValueIndex] = '\0'; // Null terminate the string
                                 printf("Attribute name: %s\n", attributeName);
+                                printf("Attribute value: %s\n", attributeValue);
                                 attributeNameIndex = 0;
+                                attributeValueIndex = 0;
                                 attributeName[0] = '\0';
+                                attributeValue[0] = '\0';
 
                                 continue;
                             }
