@@ -10,19 +10,23 @@
 int main()
 {
 
+    // Open the "thing.dae" file for reading
     FILE *file = fopen("thing.dae", "r");
 
     if (file == NULL)
     {
+        // If the file is not found, print an error message and exit
         printf("File not found\n");
         return -1;
     }
 
+    // Variables to read lines from the file
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
     int maxWhitespaceCount = 0;
 
+    // Read the file line by line
     while ((read = getline(&line, &len, file)) != -1)
     {
         int whitespaceCount = 0;
@@ -31,7 +35,7 @@ int main()
 
         for (int i = 0; i < lineLength; i++)
         {
-            char tagName[100];
+            char tagName[100] = {0};
 
             if (isspace(line[i]))
             {
@@ -46,24 +50,77 @@ int main()
 
                 if (line[i] == '<')
                 {
+                    if (line[i + 1] == '/')
+                    {
+                        // Tag end
+                        i++;
+                        continue;
+                    }
+
                     // Tag start
-                    // Getting the tag name... Go to the right until you find a space
+                    // Getting the tag name... Go to the right until you find a space or end of tag
                     int j = i + 1;
                     int k = 0; // Index for tag name.
 
-                    while (j < len)
+                    while (j < lineLength && line[j] != ' ' && line[j] != '>')
                     {
-                        if (line[j] == ' ' || line[j] == '>')
+                        if (k < sizeof(tagName) - 1) // Prevent buffer overflow
                         {
-                            break;
+                            tagName[k++] = line[j];
                         }
-                        tagName[k++] = line[j];
                         j++;
                     }
                     tagName[k] = '\0'; // Null terminate the string
                     printf("Tag name: %s\n", tagName);
+
+                    // If there's a space, read attributes
+                    if (line[j] == ' ')
+                    {
+                        int attributeReaderLine = j + 1;
+                        char attributeName[100] = {0};
+                        int attributeNameIndex = 0;
+                        int isReadingValue = 0;
+
+                        while (attributeReaderLine < lineLength && line[attributeReaderLine] != '>')
+                        {
+                            if (line[attributeReaderLine] == '=')
+                            {
+                                isReadingValue = 1;
+                                attributeReaderLine += 2; // Skip '=' and opening quote
+                                continue;
+                            }
+
+                            if (isReadingValue && line[attributeReaderLine] != '"')
+                            {
+                                attributeReaderLine++;
+                                continue;
+                            }
+                            else if (line[attributeReaderLine] == '"')
+                            {
+                                isReadingValue = 0;
+                                attributeReaderLine++; // Skip closing quote
+
+                                attributeName[attributeNameIndex] = '\0'; // Null terminate the string
+                                printf("Attribute name: %s\n", attributeName);
+                                attributeNameIndex = 0;
+                                attributeName[0] = '\0';
+
+                                continue;
+                            }
+
+                            if (!isReadingValue && line[attributeReaderLine] != ' ')
+                            {
+                                if (attributeNameIndex < sizeof(attributeName) - 1) // Prevent buffer overflow
+                                {
+                                    attributeName[attributeNameIndex++] = line[attributeReaderLine];
+                                }
+                            }
+                            attributeReaderLine++;
+                        }
+                    }
+                    i = j; // Move i to the end of the tag
                     whitespaceCount = 0;
-                    break;
+                    continue;
                 }
             }
         }
@@ -77,8 +134,7 @@ int main()
             // Same tag
         }
 
-        // printf("Whitespace count: %d\n", whitespaceCount);
-        // printf("%s", line);
+        lastWhitespaceCount = whitespaceCount;
     }
 
     printf("\nMax whitespace count: %d\n\n", maxWhitespaceCount);
