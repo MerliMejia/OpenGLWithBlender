@@ -104,7 +104,7 @@ int main()
                                 isReadingValue = 0;
                                 attributeReaderLine++; // Skip closing quote
 
-                                attributeName[attributeNameIndex] = '\0'; // Null terminate the string
+                                attributeName[attributeNameIndex] = '\0';   // Null terminate the string
                                 attributeValue[attributeValueIndex] = '\0'; // Null terminate the string
                                 printf("Attribute name: %s\n", attributeName);
                                 printf("Attribute value: %s\n", attributeValue);
@@ -124,6 +124,40 @@ int main()
                                 }
                             }
                             attributeReaderLine++;
+                        }
+
+                        if (line[attributeReaderLine] == '>')
+                        {
+                            // End of tag, process content.
+
+                            // Go to the right until you find a '<' character
+                            int contentStart = attributeReaderLine + 1;
+                            int contentEnd = 0;
+                            int contentLength = 0;
+
+                            for (int k = contentStart; k < lineLength; k++)
+                            {
+                                if (line[k] == '<')
+                                {
+                                    contentEnd = k;
+                                    contentLength = contentEnd - contentStart;
+                                    break;
+                                }
+                            }
+
+                            if (contentLength > 0)
+                            {
+                                char content[contentEnd];
+                                int contentIndex = 0;
+
+                                for (int k = contentStart; k < contentEnd; k++)
+                                {
+                                    content[contentIndex++] = line[k];
+                                }
+
+                                content[contentIndex] = '\0'; // Null terminate the string
+                                printf("Content: %s\n", content);
+                            }
                         }
                     }
                     i = j; // Move i to the end of the tag
