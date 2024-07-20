@@ -7,6 +7,46 @@
 #include <math.h>
 #include <ctype.h>
 
+typedef struct
+{
+    float r, g, b, a;
+} Color;
+
+typedef struct
+{
+    Color emission;
+    Color diffuse;
+    float index_of_refraction;
+} Lambert;
+
+typedef struct
+{
+    char sid[50]; // Assuming sid won't exceed 50 characters
+    Lambert lambert;
+} Technique;
+
+typedef struct
+{
+    Technique technique;
+} Profile_COMMON;
+
+typedef struct
+{
+    char id[50]; // Assuming id won't exceed 50 characters
+    Profile_COMMON profile_common;
+} Effect;
+
+typedef struct
+{
+    Effect effects[10]; // Assuming there won't be more than 10 effects
+    int effect_count;
+} Library_Effects;
+
+typedef struct
+{
+    Library_Effects library_effects;
+} CCollada;
+
 int main()
 {
 
@@ -25,6 +65,21 @@ int main()
     size_t len = 0;
     ssize_t read;
     int maxWhitespaceCount = 0;
+
+    CCollada ccollada;
+
+    // Flags to keep track of what we're reading
+
+    // Effects flags
+    int isReadingLibraryEffects = 0;
+    int isReadingEffect = 0;
+    int isReadingProfileCommon = 0;
+    int isReadingTechnique = 0;
+    int isReadingLambert = 0;
+    int isReadingEmission = 0;
+    int isReadingDiffuse = 0;
+    int isReadingIndexOfRefraction = 0;
+    int effectReadingIndex = 0; // Index for the effect we're reading
 
     // Read the file line by line
     while ((read = getline(&line, &len, file)) != -1)
@@ -50,12 +105,12 @@ int main()
 
                 if (line[i] == '<')
                 {
-                    if (line[i + 1] == '/')
-                    {
-                        // Tag end
-                        i++;
-                        continue;
-                    }
+                    // if (line[i + 1] == '/')
+                    // {
+                    //     // Tag end
+                    //     i++;
+                    //     continue;
+                    // }
 
                     // Tag start
                     // Getting the tag name... Go to the right until you find a space or end of tag
@@ -71,7 +126,74 @@ int main()
                         j++;
                     }
                     tagName[k] = '\0'; // Null terminate the string
-                    printf("Tag name: %s\n", tagName);
+                    // printf("Tag name: %s\n", tagName);
+
+                    // Effects flag handling
+                    if (strcmp(tagName, "library_effects") == 0)
+                    {
+                        isReadingLibraryEffects = 1;
+                    }
+                    if (strcmp(tagName, "/library_effects") == 0)
+                    {
+                        isReadingLibraryEffects = 0;
+                    }
+                    else if (strcmp(tagName, "effect") == 0)
+                    {
+                        isReadingEffect = 1;
+                        ccollada.library_effects.effect_count++;
+                    }
+                    else if (strcmp(tagName, "/effect") == 0)
+                    {
+                        effectReadingIndex++;
+                    }
+                    else if (strcmp(tagName, "profile_COMMON") == 0)
+                    {
+                        isReadingProfileCommon = 1;
+                    }
+                    else if (strcmp(tagName, "/profile_COMMON") == 0)
+                    {
+                        isReadingProfileCommon = 0;
+                    }
+                    else if (strcmp(tagName, "technique") == 0)
+                    {
+                        isReadingTechnique = 1;
+                    }
+                    else if (strcmp(tagName, "/technique") == 0)
+                    {
+                        isReadingTechnique = 0;
+                    }
+                    else if (strcmp(tagName, "lambert") == 0)
+                    {
+                        isReadingLambert = 1;
+                    }
+                    else if (strcmp(tagName, "/lambert") == 0)
+                    {
+                        isReadingLambert = 0;
+                    }
+                    else if (strcmp(tagName, "emission") == 0)
+                    {
+                        isReadingEmission = 1;
+                    }
+                    else if (strcmp(tagName, "/emission") == 0)
+                    {
+                        isReadingEmission = 0;
+                    }
+                    else if (strcmp(tagName, "diffuse") == 0)
+                    {
+                        isReadingDiffuse = 1;
+                    }
+                    else if (strcmp(tagName, "/diffuse") == 0)
+                    {
+                        isReadingDiffuse = 0;
+                    }
+                    else if (strcmp(tagName, "index_of_refraction") == 0)
+                    {
+                        isReadingIndexOfRefraction = 1;
+                    }
+                    else if (strcmp(tagName, "/index_of_refraction") == 0)
+                    {
+                        isReadingIndexOfRefraction = 0;
+                    }
 
                     // If there's a space, read attributes
                     if (line[j] == ' ')
@@ -101,13 +223,25 @@ int main()
                             }
                             else if (line[attributeReaderLine] == '"')
                             {
+                                // Effect attribute readings
+                                if (isReadingLibraryEffects && isReadingEffect)
+                                {
+                                    if (strcmp(tagName, "effect") == 0)
+                                    {
+                                        if (strcmp(attributeName, "id") == 0)
+                                        {
+                                            strcpy(ccollada.library_effects.effects[effectReadingIndex].id, attributeValue);
+                                        }
+                                    }
+                                }
+
                                 isReadingValue = 0;
                                 attributeReaderLine++; // Skip closing quote
 
                                 attributeName[attributeNameIndex] = '\0';   // Null terminate the string
                                 attributeValue[attributeValueIndex] = '\0'; // Null terminate the string
-                                printf("Attribute name: %s\n", attributeName);
-                                printf("Attribute value: %s\n", attributeValue);
+                                // printf("Attribute name: %s\n", attributeName);
+                                // printf("Attribute value: %s\n", attributeValue);
                                 attributeNameIndex = 0;
                                 attributeValueIndex = 0;
                                 attributeName[0] = '\0';
@@ -155,8 +289,39 @@ int main()
                                     content[contentIndex++] = line[k];
                                 }
 
+                                // Effects value readings.
+                                if (isReadingEffect)
+                                {
+                                    if (isReadingEmission && strcmp(tagName, "color") == 0)
+                                    {
+                                        float r, g, b, a;
+                                        sscanf(content, "%f %f %f %f", &r, &g, &b, &a);
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.emission.r = r;
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.emission.g = g;
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.emission.b = b;
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.emission.a = a;
+                                    }
+
+                                    if (isReadingDiffuse && strcmp(tagName, "color") == 0)
+                                    {
+                                        float r, g, b, a;
+                                        sscanf(content, "%f %f %f %f", &r, &g, &b, &a);
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.diffuse.r = r;
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.diffuse.g = g;
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.diffuse.b = b;
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.diffuse.a = a;
+                                    }
+
+                                    if (isReadingIndexOfRefraction && strcmp(tagName, "float") == 0)
+                                    {
+                                        float index_of_refraction;
+                                        sscanf(content, "%f", &index_of_refraction);
+                                        ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.index_of_refraction = index_of_refraction;
+                                    }
+                                }
+
                                 content[contentIndex] = '\0'; // Null terminate the string
-                                printf("Content: %s\n", content);
+                                // printf("Content: %s\n", content);
                             }
                         }
                     }
@@ -166,20 +331,26 @@ int main()
                 }
             }
         }
-
-        if (whitespaceCount > lastWhitespaceCount)
-        {
-            // New tag
-        }
-        else
-        {
-            // Same tag
-        }
-
-        lastWhitespaceCount = whitespaceCount;
     }
 
-    printf("\nMax whitespace count: %d\n\n", maxWhitespaceCount);
+    // Print id of effects in library_effects
+    for (int i = 0; i < ccollada.library_effects.effect_count; i++)
+    {
+        printf("Effect id: %s\n", ccollada.library_effects.effects[i].id);
+        float r, g, b, a;
+        r = ccollada.library_effects.effects[i].profile_common.technique.lambert.emission.r;
+        g = ccollada.library_effects.effects[i].profile_common.technique.lambert.emission.g;
+        b = ccollada.library_effects.effects[i].profile_common.technique.lambert.emission.b;
+        a = ccollada.library_effects.effects[i].profile_common.technique.lambert.emission.a;
+        printf("Emission: %f %f %f %f\n", r, g, b, a);
+        r = ccollada.library_effects.effects[i].profile_common.technique.lambert.diffuse.r;
+        g = ccollada.library_effects.effects[i].profile_common.technique.lambert.diffuse.g;
+        b = ccollada.library_effects.effects[i].profile_common.technique.lambert.diffuse.b;
+        a = ccollada.library_effects.effects[i].profile_common.technique.lambert.diffuse.a;
+        printf("Diffuse: %f %f %f %f\n", r, g, b, a);
+        printf("Index of refraction: %f\n", ccollada.library_effects.effects[i].profile_common.technique.lambert.index_of_refraction);
+        printf("\n");
+    }
 
     fclose(file);
 
