@@ -44,7 +44,24 @@ typedef struct
 
 typedef struct
 {
+    char url[50]; // Assuming url won't exceed 50 characters
+} Instance_Effect;
+
+typedef struct
+{
+    Instance_Effect instance_effect;
+} Material;
+
+typedef struct
+{
+    Material materials[10]; // Assuming there won't be more than 10 materials
+    int material_count;
+} Library_Materials;
+
+typedef struct
+{
     Library_Effects library_effects;
+    Library_Materials library_materials;
 } CCollada;
 
 int main()
@@ -80,6 +97,11 @@ int main()
     int isReadingDiffuse = 0;
     int isReadingIndexOfRefraction = 0;
     int effectReadingIndex = 0; // Index for the effect we're reading
+
+    // Material flags
+    int isReadingLibraryMaterials = 0;
+    int isReadingMaterial = 0;
+    int materialReadingIndex = 0; // Index for the material we're reading
 
     // Read the file line by line
     while ((read = getline(&line, &len, file)) != -1)
@@ -136,6 +158,7 @@ int main()
                     if (strcmp(tagName, "/library_effects") == 0)
                     {
                         isReadingLibraryEffects = 0;
+                        isReadingEffect = 0;
                     }
                     else if (strcmp(tagName, "effect") == 0)
                     {
@@ -195,6 +218,26 @@ int main()
                         isReadingIndexOfRefraction = 0;
                     }
 
+                    // Material flag handling
+                    if (strcmp(tagName, "library_materials") == 0)
+                    {
+                        isReadingLibraryMaterials = 1;
+                    }
+                    else if (strcmp(tagName, "/library_materials") == 0)
+                    {
+                        isReadingLibraryMaterials = 0;
+                    }
+                    else if (strcmp(tagName, "material") == 0)
+                    {
+                        isReadingMaterial = 1;
+                        ccollada.library_materials.material_count++;
+                    }
+                    else if (strcmp(tagName, "/material") == 0)
+                    {
+                        isReadingMaterial = 0;
+                        materialReadingIndex++;
+                    }
+
                     // If there's a space, read attributes
                     if (line[j] == ' ')
                     {
@@ -226,12 +269,23 @@ int main()
                                 // Effect attribute readings
                                 if (isReadingLibraryEffects && isReadingEffect)
                                 {
-                                    if (strcmp(tagName, "effect") == 0)
+                                    if (strcmp(attributeName, "id") == 0)
                                     {
-                                        if (strcmp(attributeName, "id") == 0)
-                                        {
-                                            strcpy(ccollada.library_effects.effects[effectReadingIndex].id, attributeValue);
-                                        }
+                                        strcpy(ccollada.library_effects.effects[effectReadingIndex].id, attributeValue);
+                                    }
+                                }
+
+                                // Material attribute readings
+                                if (isReadingLibraryMaterials && isReadingMaterial)
+                                {
+                                    if (strcmp(attributeName, "id") == 0)
+                                    {
+                                        strcpy(ccollada.library_materials.materials[materialReadingIndex].instance_effect.url, attributeValue);
+                                    }
+
+                                    if (strcmp(tagName, "instance_effect") == 0 && strcmp(attributeName, "url") == 0)
+                                    {
+                                        strcpy(ccollada.library_materials.materials[materialReadingIndex].instance_effect.url, attributeValue);
                                     }
                                 }
 
@@ -333,7 +387,7 @@ int main()
         }
     }
 
-    // Print id of effects in library_effects
+    printf("\n\nEffects\n\n");
     for (int i = 0; i < ccollada.library_effects.effect_count; i++)
     {
         printf("Effect id: %s\n", ccollada.library_effects.effects[i].id);
@@ -349,6 +403,13 @@ int main()
         a = ccollada.library_effects.effects[i].profile_common.technique.lambert.diffuse.a;
         printf("Diffuse: %f %f %f %f\n", r, g, b, a);
         printf("Index of refraction: %f\n", ccollada.library_effects.effects[i].profile_common.technique.lambert.index_of_refraction);
+        printf("\n");
+    }
+
+    printf("\nMaterials\n\n");
+    for (int i = 0; i < ccollada.library_materials.material_count; i++)
+    {
+        printf("Material id: %s\n", ccollada.library_materials.materials[i].instance_effect.url);
         printf("\n");
     }
 
