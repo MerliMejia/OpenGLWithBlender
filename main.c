@@ -60,6 +60,14 @@ typedef struct
 
 typedef struct
 {
+    char id[50];   // Assuming id won't exceed 50 characters
+    char name[50]; // Assuming name won't exceed 50 characters
+} Geometry;
+
+typedef struct
+{
+    Geometry geometries[10]; // Assuming there won't be more than 10 geometries
+    int geometry_count;
 
 } Library_Geometries;
 
@@ -108,6 +116,11 @@ int main()
     int isReadingLibraryMaterials = 0;
     int isReadingMaterial = 0;
     int materialReadingIndex = 0; // Index for the material we're reading
+
+    // Geometry flags
+    int isReadingLibraryGeometries = 0;
+    int isReadingGeometry = 0;
+    int geometryReadingIndex = 0; // Index for the geometry we're reading
 
     // Read the file line by line
     while ((read = getline(&line, &len, file)) != -1)
@@ -241,6 +254,24 @@ int main()
                         isReadingMaterial = 0;
                         materialReadingIndex++;
                     }
+                    else if (strcmp(tagName, "library_geometries") == 0)
+                    {
+                        isReadingLibraryGeometries = 1;
+                    }
+                    else if (strcmp(tagName, "/library_geometries") == 0)
+                    {
+                        isReadingLibraryGeometries = 0;
+                    }
+                    else if (strcmp(tagName, "geometry") == 0)
+                    {
+                        isReadingGeometry = 1;
+                        ccollada.library_geometries.geometry_count++;
+                    }
+                    else if (strcmp(tagName, "/geometry") == 0)
+                    {
+                        isReadingGeometry = 0;
+                        geometryReadingIndex++;
+                    }
 
                     // If there's a space, read attributes
                     if (line[j] == ' ')
@@ -270,6 +301,7 @@ int main()
                             }
                             else if (line[attributeReaderLine] == '"')
                             {
+                                attributeValue[attributeValueIndex] = '\0';
                                 // Effect attribute readings
                                 if (isReadingLibraryEffects && isReadingEffect)
                                 {
@@ -287,6 +319,20 @@ int main()
                                     else if (strcmp(tagName, "instance_effect") == 0 && strcmp(attributeName, "url") == 0)
                                     {
                                         strcpy(ccollada.library_materials.materials[materialReadingIndex].instance_effect.url, attributeValue);
+                                    }
+                                }
+                                else if (isReadingLibraryGeometries)
+                                {
+                                    if (isReadingGeometry && strcmp(tagName, "geometry") == 0)
+                                    {
+                                        if (strcmp(attributeName, "id") == 0)
+                                        {
+                                            strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].id, attributeValue);
+                                        }
+                                        else if (strcmp(attributeName, "name") == 0)
+                                        {
+                                            strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].name, attributeValue);
+                                        }
                                     }
                                 }
 
@@ -410,7 +456,14 @@ int main()
     {
         printf("Material id: %s\n", ccollada.library_materials.materials[i].instance_effect.url);
         printf("\n");
-        
+    }
+
+    printf("\nGeometries\n\n");
+    for (int i = 0; i < ccollada.library_geometries.geometry_count; i++)
+    {
+        printf("Geometry id: %s\n", ccollada.library_geometries.geometries[i].id);
+        printf("Geometry name: %s\n", ccollada.library_geometries.geometries[i].name);
+        printf("\n");
     }
 
     fclose(file);
