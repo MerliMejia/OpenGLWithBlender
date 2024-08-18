@@ -61,6 +61,14 @@ typedef struct
 typedef struct
 {
     char id[50]; // Assuming id won't exceed 50 characters
+    int count;
+    float *data;
+} Float_Array;
+
+typedef struct
+{
+    char id[50]; // Assuming id won't exceed 50 characters
+    Float_Array float_array;
 } Source;
 
 typedef struct
@@ -144,6 +152,7 @@ int main()
     int isReadingMesh = 0;
     int isReadingSource = 0;
     int sourceReadingIndex = 0; // Index for the source we're reading
+    int isReadingFloatArray = 0;
 
     // Read the file line by line
     while ((read = getline(&line, &len, file)) != -1)
@@ -312,6 +321,14 @@ int main()
                         isReadingSource = 0;
                         sourceReadingIndex++;
                     }
+                    else if (strcmp(tagName, "float_array") == 0 && isReadingSource)
+                    {
+                        isReadingFloatArray = 1;
+                    }
+                    else if (strcmp(tagName, "/float_array") == 0 && isReadingSource)
+                    {
+                        isReadingFloatArray = 0;
+                    }
 
                     // If there's a space, read attributes
                     if (line[j] == ' ')
@@ -384,6 +401,20 @@ int main()
                                                     if (strcmp(attributeName, "id") == 0)
                                                     {
                                                         strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].mesh.sources[sourceReadingIndex].id, attributeValue);
+                                                    }
+                                                }
+                                                else if (isReadingFloatArray)
+                                                {
+                                                    if (strcmp(tagName, "float_array") == 0)
+                                                    {
+                                                        if (strcmp(attributeName, "id") == 0)
+                                                        {
+                                                            strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].mesh.sources[sourceReadingIndex].float_array.id, attributeValue);
+                                                        }
+                                                        else if (strcmp(attributeName, "count") == 0)
+                                                        {
+                                                            ccollada.library_geometries.geometries[geometryReadingIndex].mesh.sources[sourceReadingIndex].float_array.count = atoi(attributeValue);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -474,6 +505,32 @@ int main()
                                         ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.index_of_refraction = index_of_refraction;
                                     }
                                 }
+                                else if (isReadingLibraryGeometries)
+                                {
+                                    if (isReadingSource)
+                                    {
+                                        if (isReadingFloatArray)
+                                        {
+                                            if (strcmp(tagName, "float_array") == 0)
+                                            {
+                                                // Initial capacity of the array
+                                                int initialCapacity = ccollada.library_geometries.geometries[geometryReadingIndex].mesh.sources[sourceReadingIndex].float_array.count;
+
+                                                // Initialize the float array with initial capacity
+                                                ccollada.library_geometries.geometries[geometryReadingIndex].mesh.sources[sourceReadingIndex].float_array.data = malloc(initialCapacity * sizeof(float));
+                                                int floatIndex = 0;
+
+                                                char *token = strtok(content, " ");
+                                                while (token != NULL)
+                                                {
+                                                    float f = atof(token);
+                                                    ccollada.library_geometries.geometries[geometryReadingIndex].mesh.sources[sourceReadingIndex].float_array.data[floatIndex++] = f;
+                                                    token = strtok(NULL, " ");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
 
                                 content[contentIndex] = '\0'; // Null terminate the string
                                 // printf("Content: %s\n", content);
@@ -524,7 +581,17 @@ int main()
         for (int j = 0; j < ccollada.library_geometries.geometries[i].mesh.source_count; j++)
         {
             printf("Source id: %s\n", ccollada.library_geometries.geometries[i].mesh.sources[j].id);
+            printf("Float array id: %s\n", ccollada.library_geometries.geometries[i].mesh.sources[j].float_array.id);
+            printf("Float array count: %d\n", ccollada.library_geometries.geometries[i].mesh.sources[j].float_array.count);
+            printf("Float array data: ");
+            for (int k = 0; k < ccollada.library_geometries.geometries[i].mesh.sources[j].float_array.count; k++)
+            {
+                printf("%f ", ccollada.library_geometries.geometries[i].mesh.sources[j].float_array.data[k]);
+            }
+            printf("\n\n");
         }
+
+        printf("\n");
     }
 
     fclose(file);
