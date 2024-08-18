@@ -60,8 +60,14 @@ typedef struct
 
 typedef struct
 {
+
+} Library_Geometries;
+
+typedef struct
+{
     Library_Effects library_effects;
     Library_Materials library_materials;
+    Library_Geometries library_geometries;
 } CCollada;
 
 int main()
@@ -155,7 +161,7 @@ int main()
                     {
                         isReadingLibraryEffects = 1;
                     }
-                    if (strcmp(tagName, "/library_effects") == 0)
+                    else if (strcmp(tagName, "/library_effects") == 0)
                     {
                         isReadingLibraryEffects = 0;
                         isReadingEffect = 0;
@@ -216,10 +222,8 @@ int main()
                     else if (strcmp(tagName, "/index_of_refraction") == 0)
                     {
                         isReadingIndexOfRefraction = 0;
-                    }
-
-                    // Material flag handling
-                    if (strcmp(tagName, "library_materials") == 0)
+                    } // Material flag handling
+                    else if (strcmp(tagName, "library_materials") == 0)
                     {
                         isReadingLibraryMaterials = 1;
                     }
@@ -273,17 +277,14 @@ int main()
                                     {
                                         strcpy(ccollada.library_effects.effects[effectReadingIndex].id, attributeValue);
                                     }
-                                }
-
-                                // Material attribute readings
-                                if (isReadingLibraryMaterials && isReadingMaterial)
+                                } // Material attribute readings
+                                else if (isReadingLibraryMaterials && isReadingMaterial)
                                 {
                                     if (strcmp(attributeName, "id") == 0)
                                     {
                                         strcpy(ccollada.library_materials.materials[materialReadingIndex].instance_effect.url, attributeValue);
                                     }
-
-                                    if (strcmp(tagName, "instance_effect") == 0 && strcmp(attributeName, "url") == 0)
+                                    else if (strcmp(tagName, "instance_effect") == 0 && strcmp(attributeName, "url") == 0)
                                     {
                                         strcpy(ccollada.library_materials.materials[materialReadingIndex].instance_effect.url, attributeValue);
                                     }
@@ -355,8 +356,7 @@ int main()
                                         ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.emission.b = b;
                                         ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.emission.a = a;
                                     }
-
-                                    if (isReadingDiffuse && strcmp(tagName, "color") == 0)
+                                    else if (isReadingDiffuse && strcmp(tagName, "color") == 0)
                                     {
                                         float r, g, b, a;
                                         sscanf(content, "%f %f %f %f", &r, &g, &b, &a);
@@ -365,8 +365,7 @@ int main()
                                         ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.diffuse.b = b;
                                         ccollada.library_effects.effects[effectReadingIndex].profile_common.technique.lambert.diffuse.a = a;
                                     }
-
-                                    if (isReadingIndexOfRefraction && strcmp(tagName, "float") == 0)
+                                    else if (isReadingIndexOfRefraction && strcmp(tagName, "float") == 0)
                                     {
                                         float index_of_refraction;
                                         sscanf(content, "%f", &index_of_refraction);
@@ -411,6 +410,7 @@ int main()
     {
         printf("Material id: %s\n", ccollada.library_materials.materials[i].instance_effect.url);
         printf("\n");
+        
     }
 
     fclose(file);
