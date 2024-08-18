@@ -60,8 +60,20 @@ typedef struct
 
 typedef struct
 {
+    char id[50]; // Assuming id won't exceed 50 characters
+} Source;
+
+typedef struct
+{
+    Source sources[3]; // Positions, Normals, and UVs
+    int source_count;
+} Mesh;
+
+typedef struct
+{
     char id[50];   // Assuming id won't exceed 50 characters
     char name[50]; // Assuming name won't exceed 50 characters
+    Mesh mesh;
 } Geometry;
 
 typedef struct
@@ -98,6 +110,14 @@ int main()
     int maxWhitespaceCount = 0;
 
     CCollada ccollada;
+    // Set initial source_counts to 3
+    for (int i = 0; i < 10; i++)
+    {
+        ccollada.library_geometries.geometries[i].mesh.source_count = 3;
+    }
+    // Set initial counts to 0
+    ccollada.library_effects.effect_count = 0;
+    ccollada.library_materials.material_count = 0;
 
     // Flags to keep track of what we're reading
 
@@ -121,6 +141,9 @@ int main()
     int isReadingLibraryGeometries = 0;
     int isReadingGeometry = 0;
     int geometryReadingIndex = 0; // Index for the geometry we're reading
+    int isReadingMesh = 0;
+    int isReadingSource = 0;
+    int sourceReadingIndex = 0; // Index for the source we're reading
 
     // Read the file line by line
     while ((read = getline(&line, &len, file)) != -1)
@@ -272,6 +295,23 @@ int main()
                         isReadingGeometry = 0;
                         geometryReadingIndex++;
                     }
+                    else if (strcmp(tagName, "mesh") == 0)
+                    {
+                        isReadingMesh = 1;
+                    }
+                    else if (strcmp(tagName, "/mesh") == 0)
+                    {
+                        isReadingMesh = 0;
+                    }
+                    else if (strcmp(tagName, "source") == 0 && isReadingMesh && isReadingGeometry && isReadingLibraryGeometries)
+                    {
+                        isReadingSource = 1;
+                    }
+                    else if (strcmp(tagName, "/source") == 0 && isReadingMesh && isReadingGeometry && isReadingLibraryGeometries)
+                    {
+                        isReadingSource = 0;
+                        sourceReadingIndex++;
+                    }
 
                     // If there's a space, read attributes
                     if (line[j] == ' ')
@@ -301,7 +341,6 @@ int main()
                             }
                             else if (line[attributeReaderLine] == '"')
                             {
-                                attributeValue[attributeValueIndex] = '\0';
                                 // Effect attribute readings
                                 if (isReadingLibraryEffects && isReadingEffect)
                                 {
@@ -320,18 +359,34 @@ int main()
                                     {
                                         strcpy(ccollada.library_materials.materials[materialReadingIndex].instance_effect.url, attributeValue);
                                     }
-                                }
+                                } // Geometry attribute readings
                                 else if (isReadingLibraryGeometries)
                                 {
-                                    if (isReadingGeometry && strcmp(tagName, "geometry") == 0)
+                                    if (isReadingGeometry)
                                     {
-                                        if (strcmp(attributeName, "id") == 0)
+                                        if (strcmp(tagName, "geometry") == 0)
                                         {
-                                            strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].id, attributeValue);
+                                            if (strcmp(attributeName, "id") == 0)
+                                            {
+                                                strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].id, attributeValue);
+                                            }
+                                            else if (strcmp(attributeName, "name") == 0)
+                                            {
+                                                strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].name, attributeValue);
+                                            }
                                         }
-                                        else if (strcmp(attributeName, "name") == 0)
+                                        else if (isReadingMesh)
                                         {
-                                            strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].name, attributeValue);
+                                            if (isReadingSource)
+                                            {
+                                                if (strcmp(tagName, "source") == 0)
+                                                {
+                                                    if (strcmp(attributeName, "id") == 0)
+                                                    {
+                                                        strcpy(ccollada.library_geometries.geometries[geometryReadingIndex].mesh.sources[sourceReadingIndex].id, attributeValue);
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -339,10 +394,11 @@ int main()
                                 isReadingValue = 0;
                                 attributeReaderLine++; // Skip closing quote
 
-                                attributeName[attributeNameIndex] = '\0';   // Null terminate the string
-                                attributeValue[attributeValueIndex] = '\0'; // Null terminate the string
                                 // printf("Attribute name: %s\n", attributeName);
                                 // printf("Attribute value: %s\n", attributeValue);
+                                attributeName[attributeNameIndex] = '\0';   // Null terminate the string
+                                attributeValue[attributeValueIndex] = '\0'; // Null terminate the string
+
                                 attributeNameIndex = 0;
                                 attributeValueIndex = 0;
                                 attributeName[0] = '\0';
@@ -464,6 +520,11 @@ int main()
         printf("Geometry id: %s\n", ccollada.library_geometries.geometries[i].id);
         printf("Geometry name: %s\n", ccollada.library_geometries.geometries[i].name);
         printf("\n");
+
+        for (int j = 0; j < ccollada.library_geometries.geometries[i].mesh.source_count; j++)
+        {
+            printf("Source id: %s\n", ccollada.library_geometries.geometries[i].mesh.sources[j].id);
+        }
     }
 
     fclose(file);

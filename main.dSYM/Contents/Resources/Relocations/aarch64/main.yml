@@ -2,11 +2,11 @@
 triple:          'arm64-apple-darwin'
 binary-path:     main
 relocations:
-  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100002E34, symSize: 0xB48 }
-  - { offsetInCU: 0x42, offset: 0x42, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100002E34, symSize: 0xB48 }
-  - { offsetInCU: 0x26, offset: 0x752, size: 0x8, addend: 0x0, symName: _readShaderSource, symObjAddr: 0x0, symBinAddr: 0x10000397C, symSize: 0x128 }
-  - { offsetInCU: 0x46, offset: 0x772, size: 0x8, addend: 0x0, symName: _readShaderSource, symObjAddr: 0x0, symBinAddr: 0x10000397C, symSize: 0x128 }
-  - { offsetInCU: 0x26, offset: 0x9E8, size: 0x8, addend: 0x0, symName: _genShader, symObjAddr: 0x0, symBinAddr: 0x100003AA4, symSize: 0x168 }
-  - { offsetInCU: 0x41, offset: 0xA03, size: 0x8, addend: 0x0, symName: _genShader, symObjAddr: 0x0, symBinAddr: 0x100003AA4, symSize: 0x168 }
-  - { offsetInCU: 0xB0, offset: 0xA72, size: 0x8, addend: 0x0, symName: _genShaderProgram, symObjAddr: 0x168, symBinAddr: 0x100003C0C, symSize: 0x170 }
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x10000218C, symSize: 0x1648 }
+  - { offsetInCU: 0x42, offset: 0x42, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x10000218C, symSize: 0x1648 }
+  - { offsetInCU: 0x26, offset: 0x9EC, size: 0x8, addend: 0x0, symName: _readShaderSource, symObjAddr: 0x0, symBinAddr: 0x1000037D4, symSize: 0x128 }
+  - { offsetInCU: 0x46, offset: 0xA0C, size: 0x8, addend: 0x0, symName: _readShaderSource, symObjAddr: 0x0, symBinAddr: 0x1000037D4, symSize: 0x128 }
+  - { offsetInCU: 0x26, offset: 0xC82, size: 0x8, addend: 0x0, symName: _genShader, symObjAddr: 0x0, symBinAddr: 0x1000038FC, symSize: 0x168 }
+  - { offsetInCU: 0x41, offset: 0xC9D, size: 0x8, addend: 0x0, symName: _genShader, symObjAddr: 0x0, symBinAddr: 0x1000038FC, symSize: 0x168 }
+  - { offsetInCU: 0xB0, offset: 0xD0C, size: 0x8, addend: 0x0, symName: _genShaderProgram, symObjAddr: 0x168, symBinAddr: 0x100003A64, symSize: 0x170 }
 ...
